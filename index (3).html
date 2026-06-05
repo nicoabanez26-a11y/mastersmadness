@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Senior Masters Madness — Dartmouth '26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  /* ── CONFIG: paste your Supabase credentials below ── */
+  :root {
+    --supabase-url: "";        /* e.g. https://xyzcompany.supabase.co */
+    --supabase-anon-key: "";   /* your anon/public key */
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00693E;
+    --green-dark: #004d2d;
+    --green-light: #e8f5ee;
+    --gold: #C8972B;
+    --gold-light: #fdf6e3;
+    --cream: #FAF8F3;
+    --ink: #1a1a18;
+    --ink-muted: #5a5a52;
+    --ink-faint: #9a9a90;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.2);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* LIVE ANNOUNCEMENT BANNER */
+  .announcement-banner {
+    background: var(--gold);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    padding: 10px 1rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    position: relative;
+    z-index: 101;
+  }
+
+  /* HEADER */
+  .site-header {
+    background: var(--green);
+    color: white;
+    padding: 2rem 1.5rem 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 40px,
+      rgba(255,255,255,0.03) 40px,
+      rgba(255,255,255,0.03) 80px
+    );
+  }
+  .site-header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    letter-spacing: 2px;
+    line-height: 1;
+    position: relative;
+  }
+  .site-header h1 span { color: var(--gold); }
+  .site-header p {
+    font-size: 13px;
+    opacity: 0.75;
+    margin-top: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: relative;
+  }
+  .scoring-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 14px;
+    position: relative;
+  }
+  .scoring-pill {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+  }
+
+  /* RULES TRACK MODULE */
+  .rules-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 1.5rem;
+    padding: 0 10px;
+  }
+  .rules-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    text-align: left;
+  }
+  .rules-card h4 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gold);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rules-card p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.9);
+    line-height: 1.3;
+    opacity: 1;
+    text-transform: none;
+    margin-top: 0;
+  }
+
+  /* NAV */
+  .tab-nav {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: var(--ink-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .tab-btn.active {
+    color: var(--green);
+    border-bottom-color: var(--green);
+  }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── BRACKET TRACK & MULTI-LINE SUPPORT ── */
+  .bracket-wrap { 
+    overflow-x: auto; 
+    padding-bottom: 1rem; 
+  }
+  .bracket-grid { 
+    display: flex; 
+    min-width: 1800px; 
+    gap: 15px;         
+  }
+  .round-col { 
+    display: flex; 
+    flex-direction: column; 
+    flex: 1; 
+    min-width: 280px;  
+  }
+  .round-hdr {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ink-faint);
+    text-align: center;
+    padding: 10px 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .round-hdr span {
+    display: block;
+    text-transform: none;
+    font-weight: 400;
+    font-size: 9.5px;
+    color: var(--ink-muted);
+    margin-top: 3px;
+  }
+  .round-matches { display: flex; flex-direction: column; flex: 1; }
+  .match-slot {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6px 4px;
+  }
+  .match-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .team-btn {
+    width: 100%;
+    padding: 8px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    text-align: left;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    transition: background 0.1s;
+    border-bottom: 1px solid var(--border);
+    
+    white-space: normal; 
+    word-break: normal;
+    line-height: 1.3;
+  }
+  .team-btn:last-child { border-bottom: none; }
+  .team-btn:hover:not(.locked-click) { background: #f5f5f0; }
+  .team-btn.selected { background: #e8f5ee; color: var(--green-dark); font-weight: 600; }
+  .team-btn.winner { background: var(--gold-light); color: #7a5a00; font-weight: 600; }
+  .team-btn.tbd { color: var(--ink-faint); font-style: italic; cursor: default; }
+  .team-btn.eliminated { opacity: 0.45; }
+  .seed-num { font-size: 9px; color: var(--ink-faint); min-width: 12px; flex-shrink: 0; }
+  .team-btn.selected .seed-num { color: var(--green); }
+  .team-btn.winner .seed-num { color: var(--gold); }
+
+  /* FORM */
+  .submit-panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    max-width: 480px;
+  }
+  .submit-panel h2 { font-size: 16px; font-weight: 600; margin-bottom: 1rem; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-muted); margin-bottom: 4px; }
+  .field input {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--cream);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus { border-color: var(--green); }
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+  .pick-status {
+    font-size: 12px;
+    color: var(--ink-muted);
+    text-align: center;
+    margin: 10px 0 0;
+  }
+  .pick-status strong { color: var(--ink); }
+  .venmo-note {
+    margin-top: 12px;
+    background: var(--gold-light);
+    border: 1px solid #e8d48a;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #7a5a00;
+    text-align: center;
+  }
+  .msg-success {
+    margin-top: 10px;
+    background: var(--green-light);
+    border: 1px solid #7dcca0;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--green-dark);
+    text-align: center;
+  }
+  .msg-error {
+    margin-top: 10px;
+    background: #fdecea;
+    border: 1px solid #f5a9a9;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #8b1c1c;
+    text-align: center;
+  }
+
+  /* LEADERBOARD */
+  .lb-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .lb-stat {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    flex: 1;
+    min-width: 120px;
+  }
+  .lb-stat-label { font-size: 11px; font-weight: 500; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.5px; }
+  .lb-stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--green); letter-spacing: 1px; margin-top: 2px; }
+  .lb-table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+  .lb-table th { font-size: 11px; font-weight: 600; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; background: #f9f8f4; border-bottom: 1px solid var(--border); }
+  .lb-table th:last-child { text-align: right; }
+  .lb-table td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--border); color: var(--ink); }
+  .lb-table td:last-child { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .lb-table tr:last-child td { border-bottom: none; }
+  .lb-table tr:hover td { background: #fafaf6; }
+  .rank { inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: 11px; font-weight: 600; background: #f0ede4; color: var(--ink-muted); }
+  .rank.r1 { background: var(--gold); color: white; }
+  .rank.r2 { background: #c0bfbb; color: white; }
+  .rank.r3 { background: #c88a5e; color: white; }
+  .empty { text-align: center; padding: 3rem; color: var(--ink-faint); font-size: 14px; }
+
+  /* ADMIN MODIFICATIONS */
+  .admin-login-wrap { max-width: 340px; margin: 3rem auto; }
+  .admin-login-wrap h2 { font-size: 18px; font-weight: 600; margin-bottom: 1.5rem; }
+  .admin-section-title { font-size: 13px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .admin-rounds { display: flex; flex-direction: column; gap: 1.5rem; }
+  .admin-round-block { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; }
+  .admin-round-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .admin-matches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .admin-match { }
+  .admin-match-label { font-size: 10px; color: var(--ink-faint); font-weight: 500; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .admin-match-btns { display: flex; flex-direction: column; gap: 3px; }
+  .admin-win-btn {
+    width: 100%;
+    padding: 6px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: var(--cream);
+    color: var(--ink);
+    text-align: left;
+    transition: all 0.1s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .admin-win-btn.active { background: var(--gold-light); border-color: var(--gold); color: #7a5a00; font-weight: 600; }
+  .admin-win-btn:hover:not(.active):not(:disabled) { background: var(--green-light); border-color: var(--green); }
+  .admin-win-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  
+  .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .admin-control-block { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem; display: flex; gap: 20px; flex-wrap: wrap; }
+  .admin-input-card { flex: 1; min-width: 200px; }
+  .admin-entries-list-card { flex: 2; min-width: 300px; max-height: 250px; overflow-y: auto; border-left: 1px solid var(--border); padding-left: 20px; }
+  
+  .admin-entry-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; }
+  .admin-entry-row:last-child { border-bottom: none; }
+  .btn-delete { background: #fdecea; color: #8b1c1c; border: 1px solid #f5a9a9; padding: 2px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 500; }
+  .btn-delete:hover { background: #8b1c1c; color: white; }
+
+  .admin-logout { font-size: 12px; padding: 6px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: transparent; cursor: pointer; color: var(--ink-muted); }
+  .admin-logout:hover { background: #fdecea; border-color: #f5a9a9; color: #8b1c1c; }
+  .admin-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+  .loading { text-align: center; padding: 2rem; color: var(--ink-faint); }
+
+  .setup-notice {
+    background: #fff8e6;
+    border: 1px solid #e8d48a;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 13px;
+    color: #7a5a00;
+  }
+  .setup-notice strong { display: block; margin-bottom: 6px; font-size: 14px; }
+  .setup-notice code { background: rgba(0,0,0,0.07); padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
+
+  @media (max-width: 600px) {
+    .main { padding: 1rem; }
+    .lb-meta { flex-direction: column; }
+    .admin-control-block { flex-direction: column; }
+    .admin-entries-list-card { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="announcement-banner" id="announcement-bar">
+  🚨 Loading countdown tracking...
+</div>
+
+<header class="site-header">
+  <h1>🏓 Senior Masters <span>Madness</span></h1>
+  <p>Dartmouth College · Class of 2026</p>
+  <div class="scoring-pills">
+    <span class="scoring-pill">R64: 1pt</span>
+    <span class="scoring-pill">R32: 2pts</span>
+    <span class="scoring-pill">Sweet 16: 4pts</span>
+    <span class="scoring-pill">Elite 8: 8pts</span>
+    <span class="scoring-pill">Final 4: 16pts</span>
+    <span class="scoring-pill">Champ: 32pts</span>
+  </div>
+
+  <div class="rules-dashboard">
+    <div class="rules-card">
+      <h4>📅 The Deadline</h4>
+      <p>All bracket submissions close strictly on **May 30th at 9:00 PM**. No late entries allowed.</p>
+    </div>
+    <div class="rules-card">
+      <h4>🔥 Unlimited Brackets</h4>
+      <p>Submit as many unique brackets as you want. Each submission requires a matching $5 entry fee.</p>
+    </div>
+    <div class="rules-card">
+      <h4>💰 Winner Take All</h4>
+      <p>The top score on the live leaderboard walks away with 100% of the cash pool. In case of a tie, the pot splits evenly.</p>
+    </div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('bracket', this)">Pick Bracket</button>
+  <button class="tab-btn" onclick="switchTab('leaderboard', this)">Leaderboard</button>
+  <button class="tab-btn" onclick="switchTab('admin', this)">Admin</button>
+</nav>
+
+<main class="main">
+
+  <div id="tab-bracket" class="section active">
+    <div id="setup-banner" class="setup-notice" style="display:none">
+      <strong>⚙️ Setup required</strong>
+      Open this file in a text editor and replace the placeholder values near the top of the &lt;script&gt; tag.
+    </div>
+    <div class="bracket-wrap">
+      <div class="bracket-grid" id="bracket-grid"></div>
+    </div>
+    <div class="submit-panel">
+      <h2>Submit your bracket</h2>
+      <div class="field">
+        <label>Your name</label>
+        <input type="text" id="sub-name" placeholder="e.g. Alex Smith" />
+      </div>
+      <div class="field">
+        <label>Your email</label>
+        <input type="email" id="sub-email" placeholder="you@dartmouth.edu" />
+      </div>
+      <button class="btn-primary" id="submit-btn" disabled onclick="submitBracket()">Submit Bracket</button>
+      <p class="pick-status" id="pick-status"><strong>0</strong> / 63 picks made</p>
+      <div class="venmo-note">💸 Send $5 to <strong>@nico_banez</strong> with memo "Pong Bracket · [Your Name]"</div>
+      <div id="submit-msg"></div>
+    </div>
+  </div>
+
+  <div id="tab-leaderboard" class="section">
+    <div class="lb-meta">
+      <div class="lb-stat">
+        <div class="lb-stat-label">Entries</div>
+        <div class="lb-stat-value" id="lb-entries">—</div>
+      </div>
+      <div class="lb-stat">
+        <div class="lb-stat-label">Prize Pool</div>
+        <div class="lb-stat-value" id="lb-pool">—</div>
+      </div>
+      <div class="lb-stat">
+        <div class="lb-stat-label">Games Played</div>
+        <div class="lb-stat-value" id="lb-games">—</div>
+      </div>
+    </div>
+    <div id="leaderboard-body"><div class="loading">Loading standings…</div></div>
+  </div>
+
+  <div id="tab-admin" class="section">
+    <div id="admin-login-area">
+      <div class="admin-login-wrap">
+        <h2>Admin login</h2>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="admin-pw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')adminLogin()" />
+        </div>
+        <button class="btn-primary" onclick="adminLogin()">Log in</button>
+        <div id="admin-login-msg"></div>
+      </div>
+    </div>
+    
+    <div id="admin-panel" style="display:none">
+      <div class="admin-top">
+        <div>
+          <div style="font-size:18px;font-weight:600">Tournament admin</div>
+          <div style="font-size:13px;color:var(--ink-muted);margin-top:2px">Manage brackets, track payments, and update match results live.</div>
+        </div>
+        <button class="admin-logout" onclick="adminLogout()">Log out</button>
+      </div>
+      
+      <div class="admin-stats-grid" id="admin-stats-grid"></div>
+      
+      <div class="admin-control-block">
+        <div class="admin-input-card">
+          <div class="admin-section-title">Prize Pool Overrides</div>
+          <div class="field">
+            <label>Override Total Prize Pot ($)</label>
+            <input type="number" id="admin-pot-override" placeholder="Leave empty for auto tracking" oninput="savePotOverride()" />
+          </div>
+          <p style="font-size:11px; color:var(--ink-muted); line-height:1.4;">Leave this input blank to let the code automatically calculate the pot based on $5 per active database entry.</p>
+        </div>
+        <div class="admin-entries-list-card">
+          <div class="admin-section-title">Purge Unpaid Entries</div>
+          <div id="admin-entries-container">
+            <p class="loading">Loading database entries...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-rounds" id="admin-rounds"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIGURATION — edit these values
+// ══════════════════════════════════════════
+const SUPABASE_URL      = "https://chzkvqnzgyempugdzsmb.supabase.co";       
+const SUPABASE_ANON_KEY = "sb_publishable_NHLFncuI8Yq3Fjkc0nycKQ_LEg_tlAy"; 
+const ADMIN_PASSWORD   = "DartBaseWins!";                
+const VENMO_HANDLE     = "@nico_banez";        
+
+// AUTOMATIC LOCK DEADLINE (May 30, 2026 at 9:00 PM)
+const LOCK_DEADLINE    = "2026-05-30T21:00:00"; 
+// ══════════════════════════════════════════
+
+// Round headers configured with target dates and details from timeline image
+const ROUND_NAMES = [
+  "Round of 64<span>any house<br>report before MIDNIGHT May 31st</span>",
+  "Round of 32<span>any house<br>report before MIDNIGHT June 3rd</span>",
+  "Round of 16<span>any house<br>report before MIDNIGHT June 5th</span>",
+  "Quarter Finals (3 game series)<span>June 7th<br>Quarterfinal 1-4 @ LOCATION TBD</span>",
+  "Semi Finals (3 game series)<span>June 8th, TIME TBD<br>LOCATION TBD</span>",
+  "Championship Game (3 game series)<span>June 8th, TIME TBD<br>LOCATION TBD</span>"
+];
+const ROUND_PTS   = [1, 2, 4, 8, 16, 32];
+
+// Corrected pairings matching resolved Round of 32 configurations exactly
+const TEAMS = [
+  ["(1) Ashley Goh & Arsh Singh", "(25) Ferielle Fenichell & Daniel Chang"],
+  ["(28) Ian Glick & Abby Sieler", "(2) Arshi Nagra & Om Shah"],
+  ["(30) Despoina Petrou & Raul Vargas", "(31) John Worden & Miel Wewerka"],
+  ["(3) Samantha Bennett & Eddie Albert", "(34) María Ramírez & Felix Feldman"],
+  ["(36) Ryan Gonzalez & Emma Yu", "(4) Jake Fleming & Karina Rao"],
+  ["(37) Keva Burshiem & Javier Alicea-Santiago", "(40) Jacob Schnell & Abby Headstrom"],
+  ["(5) Ella Klinsky & Jordan Van Der Meulen", "(41) Maddie Hughes & Bennett Mosk"],
+  ["(43) Zain Ali & Sam Haskel", "(6) Callie Worth & Warren Klein"],
+  ["(46) Lauren Kader & Ben Offit", "(48) Maisie Pike & Andrew Mitchell"],
+  ["(7) Mariella Schweitzer & Liam Murray", "(49) Eloise Osman & Collin Kuester"],
+  ["(51) Tanaz Muhamed & Leon Wang", "(8) Jada Jones & Colton Mcmaster"],
+  ["(54) Elizabeth Sullivan & Jack Jervis", "(56) Kristi Conner & Peter Mckenna"],
+  ["(9) Shannen Gallagher & Ryan Lee", "(57) Maddy Sclar & Shawn Yoon"],
+  ["(60) Lucy Vitali & Quinn Allred", "(10) Sofia De La Barrera & Jackson Sharpe"],
+  ["(61) Jabari Johnson & Leora DePerry", "(64) Amedee Conley-Kapoi & Gustavo Lopez-Fleming"],
+  ["(11) Lucy McLaughlin & Tim Mellis", "(65) Bill Zheng & Naaz Valvani"],
+  ["(68) Caleb Ash & Annabella Wu", "(12) Gabe Gottesman & Mikayla Zedek"],
+  ["(69) Brandon Mitchell-Day & Brooke Hollawell", "(72) Ellie Stevens & Noah Larbalestier"],
+  ["(13) Laura Yam & Jesse Dong", "(74) Bo Kim & Madeline Chia"],
+  ["(76) Miles Groom & Brooke Hess", "(14) Daniel Lustbater & Marina Frayre"],
+  ["(77) Stella Bale & Nico Bãnez", "(80) Julia Fortier & Thomas Power"],
+  ["(15) Anna Manta & Philip Ernst", "(82) Lorenzo Cuellar & Shouka Tavakolian"],
+  ["(84) Samuel Dupuis & Autumn Clark", "(16) Alex Cho & Avery Jones"],
+  ["(85) Henry Poret & Kiki Rosenthal", "(88) Allison ohde & Fin szafnauer"],
+  ["(17) Mason King & Genevieve Schaefer", "(89) Valentina Cruz & Alex Krause"],
+  ["(91) Daniel Zhou & Maddie Dubrinsky", "(18) Maura Fiorenza & FT Chiu"],
+  ["(94) Catherine Erb & Cameron Brown", "(19) Rohan Ray & Charlotte Sadelain"],
+  ["(96) Matthew Genser & Lane Murray", "(20) Alyah Martinez & Javier Paulino"],
+  ["(97) Jordan Healy & Will Stahl", "(21) Aarav Malhotra & Grace Park"],
+  ["(100) Clay Socas & Grace Zanni", "(22) Rana Keshav Thakkar & Pan Thu"],
+  ["(102) Varun Swaminathan & Annika Sharma", "(23) Sarnika Ali & Dhruv Chandra"],
+  ["(103) Minje Kwun & Aaron Zhang", "(24) Annie Joy & Cooper Camp"]
+];
+
+let db = null;
+let results = {};      
+let userPicks = {};    
+let submissions = [];  
+let isAdmin = false;
+
+function initDB() {
+  if (!SUPABASE_URL || SUPABASE_URL === "https://xxxx.supabase.co") {
+    document.getElementById('setup-banner').style.display = 'block';
+    return false;
+  }
+  try {
+    db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
+  } catch(e) {
+    console.error('Supabase init failed:', e);
+    return false;
+  }
+}
+
+function updateTopAnnouncement() {
+  const banner = document.getElementById('announcement-bar');
+  const now = new Date();
+  const deadline = new Date(LOCK_DEADLINE);
+  const diff = deadline - now;
+
+  if (diff <= 0) {
+    banner.style.background = '#8b1c1c';
+    banner.innerHTML = '🔒 Brackets are locked! Senior Masters Madness tournament results will update live below.';
+    return true;
+  }
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (hours > 0) {
+    banner.innerHTML = `⏳ Masters Madness Bracket Lock: **${hours}h ${mins}m** left to make your picks and submit!`;
+  } else {
+    banner.innerHTML = `⚠️ Master Madness Bracket Locking Soon: **${mins} minutes** left! Submit your entries now.`;
+  }
+  return false;
+}
+
+function mid(r, m) { return `r${r}_m${m}`; }
+function totalMatches() { return 63; }
+
+function getMatchup(r, m) {
+  if (r === 0) {
+    return { t1: TEAMS[m][0], t2: TEAMS[m][1], seed1: null, seed2: null };
+  }
+  const t1 = results[mid(r-1, m*2)] || null;
+  const t2 = results[mid(r-1, m*2+1)] || null;
+  return { t1, t2, seed1: null, seed2: null };
+}
+
+function getPickMatchup(r, m) {
+  if (r === 0) return { t1: TEAMS[m][0], t2: TEAMS[m][1] };
+  const t1 = userPicks[mid(r-1, m*2)] || null;
+  const t2 = userPicks[mid(r-1, m*2+1)] || null;
+  return { t1, t2 };
+}
+
+function scoreSubmission(picks) {
+  let score = 0;
+  for (let r = 0; r < 6; r++) {
+    const count = 32 / Math.pow(2, r);
+    for (let m = 0; m < count; m++) {
+      const id = mid(r, m);
+      if (results[id] && picks[id] === results[id]) score += ROUND_PTS[r];
+    }
+  }
+  return score;
+}
+
+function renderBracket() {
+  const grid = document.getElementById('bracket-grid');
+  grid.innerHTML = '';
+  const isPastDeadline = new Date() > new Date(LOCK_DEADLINE);
+
+  for (let r = 0; r < 6; r++) {
+    const count = 32 / Math.pow(2, r);
+    const col = document.createElement('div');
+    col.className = 'round-col';
+    col.innerHTML = `<div class="round-hdr">${ROUND_NAMES[r]}</div>`;
+    const matches = document.createElement('div');
+    matches.className = 'round-matches';
+    col.appendChild(matches);
+
+    for (let m = 0; m < count; m++) {
+      const { t1, t2, seed1, seed2 } = getMatchup(r, m);
+      const { t1: p1, t2: p2 } = getPickMatchup(r, m);
+      const actualWinner = results[mid(r, m)];
+      const userPick = userPicks[mid(r, m)];
+
+      const slot = document.createElement('div');
+      slot.className = 'match-slot';
+      slot.style.flex = String(Math.pow(2, r));
+
+      const card = document.createElement('div');
+      card.className = 'match-card';
+
+      [[p1, seed1], [p2, seed2]].forEach(([name, seed]) => {
+        const btn = document.createElement('button');
+        btn.className = 'team-btn';
+        if (!name) { btn.classList.add('tbd'); btn.disabled = true; }
+        else if (actualWinner && actualWinner !== name) btn.classList.add('eliminated');
+        else if (actualWinner === name) btn.classList.add('winner');
+        else if (userPick === name) btn.classList.add('selected');
+
+        const s = document.createElement('span');
+        s.className = 'seed-num';
+        s.textContent = seed || '';
+        btn.appendChild(s);
+        btn.appendChild(document.createTextNode(name || 'TBD'));
+
+        if (name && !actualWinner && !isPastDeadline) {
+          btn.onclick = () => { onPick(r, m, name); };
+        } else if (isPastDeadline) {
+          btn.classList.add('locked-click');
+          btn.style.cursor = 'default';
+        }
+        card.appendChild(btn);
+      });
+
+      slot.appendChild(card);
+      matches.appendChild(slot);
+    }
+    grid.appendChild(col);
+  }
+}
+
+function onPick(r, m, team) {
+  if (new Date() > new Date(LOCK_DEADLINE)) return;
+  userPicks[mid(r, m)] = team;
+  invalidateDownstream(r, m);
+  renderBracket();
+  updatePickStatus();
+}
+
+function invalidateDownstream(r, m) {
+  if (r >= 5) return;
+  const nr = r + 1, nm = Math.floor(m / 2);
+  const { t1, t2 } = getPickMatchup(nr, nm);
+  const cur = userPicks[mid(nr, nm)];
+  if (cur && cur !== t1 && cur !== t2) {
+    delete userPicks[mid(nr, nm)];
+    invalidateDownstream(nr, nm);
+  }
+}
+
+function updatePickStatus() {
+  const made = Object.keys(userPicks).length;
+  const total = totalMatches();
+  const btn = document.getElementById('submit-btn');
+  const el = document.getElementById('pick-status');
+  
+  const isPastDeadline = new Date() > new Date(LOCK_DEADLINE);
+
+  if (isPastDeadline) {
+    el.innerHTML = '🔒 <strong>Submissions are closed.</strong> The tournament track is locked!';
+    btn.disabled = true;
+    return;
+  }
+
+  if (made >= total) {
+    el.innerHTML = '✓ All picks made — ready to submit!';
+    btn.disabled = false;
+  } else {
+    el.innerHTML = `<strong>${made}</strong> / ${total} picks made`;
+    btn.disabled = true;
+  }
+}
+
+async function submitBracket() {
+  if (new Date() > new Date(LOCK_DEADLINE)) {
+    alert("Submissions closed! The tournament bracket is locked.");
+    return;
+  }
+
+  const name  = document.getElementById('sub-name').value.trim();
+  const email = document.getElementById('sub-email').value.trim();
+  const msgEl = document.getElementById('submit-msg');
+  msgEl.innerHTML = '';
+
+  if (!name || !email) {
+    msgEl.innerHTML = '<div class="msg-error">Please enter your name and email.</div>';
+    return;
+  }
+  if (Object.keys(userPicks).length < totalMatches()) {
+    msgEl.innerHTML = '<div class="msg-error">Please complete all 63 picks first.</div>';
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  const entry = { name, email, picks: userPicks, score: 0, submitted_at: new Date().toISOString() };
+
+  if (db) {
+    const { error } = await db.from('submissions').insert([entry]);
+    if (error) {
+      msgEl.innerHTML = `<div class="msg-error">Error: ${error.message}</div>`;
+      btn.disabled = false;
+      btn.textContent = 'Submit Bracket';
+      return;
+    }
+  } else {
+    submissions.push(entry);
+  }
+
+  msgEl.innerHTML = `<div class="msg-success">🎉 Bracket submitted, ${name}! Don't forget to Venmo ${VENMO_HANDLE}.</div>`;
+  btn.textContent = 'Submitted!';
+  document.getElementById('sub-name').value = '';
+  document.getElementById('sub-email').value = '';
+  userPicks = {};
+  renderBracket();
+  updatePickStatus();
+  setTimeout(() => { btn.disabled = true; btn.textContent = 'Submit Bracket'; }, 3000);
+}
+
+function getOverriddenPot(entriesCount) {
+  const savedOverride = localStorage.getItem('pong_pot_override');
+  if (savedOverride && savedOverride.trim() !== "") {
+    return `$${savedOverride}`;
+  }
+  return `$${entriesCount * 5}`;
+}
+
+function savePotOverride() {
+  const val = document.getElementById('admin-pot-override').value;
+  localStorage.setItem('pong_pot_override', val);
+  
+  const gamesPlayed = Object.keys(results).length;
+  document.getElementById('admin-display-pot-val').textContent = getOverriddenPot(submissions.length);
+}
+
+async function fetchAllEntries() {
+  if (db) {
+    const { data, error } = await db.from('submissions').select('id, name, email');
+    if (!error && data) {
+      submissions = data;
+      renderAdminEntriesManager(data);
+    }
+  }
+}
+
+function renderAdminEntriesManager(entries) {
+  const container = document.getElementById('admin-entries-container');
+  if (entries.length === 0) {
+    container.innerHTML = '<p style="font-size:12px; color:var(--ink-faint);">No active submissions found.</p>';
+    return;
+  }
+  
+  container.innerHTML = entries.map(e => `
+    <div class="admin-entry-row">
+      <span><strong>${escHtml(e.name)}</strong> (${escHtml(e.email)})</span>
+      <button class="btn-delete" onclick="deleteEntry('${e.id}', '${escHtml(e.name)}')">Delete</button>
+    </div>
+  `).join('');
+}
+
+async function deleteEntry(id, name) {
+  if (!confirm(`Are you sure you want to delete ${name}'s bracket? This action completely purges their card from the leaderboard rankings.`)) return;
+  
+  if (db) {
+    const { error } = await db.from('submissions').delete().eq('id', id);
+    if (error) {
+      alert(`Failed to delete entry: ${error.message}`);
+      return;
+    }
+  }
+  
+  await fetchAllEntries();
+  renderAdmin();
+}
+
+async function loadLeaderboard() {
+  document.getElementById('leaderboard-body').innerHTML = '<div class="loading">Loading standings…</div>';
+  if (db) {
+    const { data, error } = await db.from('submissions').select('name, picks, submitted_at');
+    if (!error && data) submissions = data;
+  }
+
+  const { data: resData = [] } = db ? await db.from('results').select('match_id, winner') : { data: [] };
+  if (resData) {
+    results = {};
+    resData.forEach(r => { results[r.match_id] = r.winner; });
+    renderBracket();
+  }
+
+  const scored = submissions.map(s => ({ ...s, score: scoreSubmission(s.picks || {}) }))
+    .sort((a, b) => b.score - a.score || new Date(a.submitted_at) - new Date(b.submitted_at));
+
+  const gamesPlayed = Object.keys(results).length;
+  document.getElementById('lb-entries').textContent = scored.length;
+  document.getElementById('lb-pool').textContent = getOverriddenPot(scored.length);
+  document.getElementById('lb-games').textContent = `${gamesPlayed}/63`;
+
+  if (scored.length === 0) {
+    document.getElementById('leaderboard-body').innerHTML = '<div class="empty">No entries yet — be the first!</div>';
+    return;
+  }
+
+  const rankClass = i => i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
+  document.getElementById('leaderboard-body').innerHTML = `
+    <table class="lb-table">
+      <thead><tr><th>#</th><th>Name</th><th>Score</th></tr></thead>
+      <tbody>
+        ${scored.map((s, i) => `
+          <tr>
+            <td><span class="rank ${rankClass(i)}">${i+1}</span></td>
+            <td>${escHtml(s.name)}</td>
+            <td>${s.score} pts</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function adminLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw !== ADMIN_PASSWORD) {
+    document.getElementById('admin-login-msg').innerHTML = '<div class="msg-error" style="margin-top:8px">Incorrect password.</div>';
+    return;
+  }
+  isAdmin = true;
+  document.getElementById('admin-login-area').style.display = 'none';
+  document.getElementById('admin-panel').style.display = 'block';
+  
+  const savedOverride = localStorage.getItem('pong_pot_override');
+  if (savedOverride) document.getElementById('admin-pot-override').value = savedOverride;
+  
+  fetchAllEntries().then(renderAdmin);
+}
+
+function adminLogout() {
+  isAdmin = false;
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('admin-login-area').style.display = 'block';
+  document.getElementById('admin-pw').value = '';
+}
+
+async function loadResults() {
+  if (!db) return;
+  const { data } = await db.from('results').select('match_id, winner');
+  if (data) { results = {}; data.forEach(r => { results[r.match_id] = r.winner; }); }
+}
+
+function renderAdmin() {
+  const gamesPlayed = Object.keys(results).length;
+  document.getElementById('admin-stats-grid').innerHTML = `
+    <div class="lb-stat"><div class="lb-stat-label">Entries</div><div class="lb-stat-value">${submissions.length}</div></div>
+    <div class="lb-stat"><div class="lb-stat-label">Prize pool</div><div class="lb-stat-value" id="admin-display-pot-val">${getOverriddenPot(submissions.length)}</div></div>
+    <div class="lb-stat"><div class="lb-stat-label">Games recorded</div><div class="lb-stat-value">${gamesPlayed}/63</div></div>
+  `;
+
+  const container = document.getElementById('admin-rounds');
+  container.innerHTML = '';
+
+  for (let r = 0; r < 6; r++) {
+    const count = 32 / Math.pow(2, r);
+    const block = document.createElement('div');
+    block.className = 'admin-round-block';
+    block.innerHTML = `<div class="admin-round-title">Round ${r+1} <span style="font-weight:400;color:var(--ink-muted);font-size:12px">· ${ROUND_PTS[r]} pt${ROUND_PTS[r]>1?'s':''} per win</span></div>`;
+    const grid = document.createElement('div');
+    grid.className = 'admin-matches-grid';
+
+    for (let m = 0; m < count; m++) {
+      const { t1, t2 } = getMatchup(r, m);
+      const winner = results[mid(r, m)];
+      const matchDiv = document.createElement('div');
+      matchDiv.className = 'admin-match';
+      matchDiv.innerHTML = `<div class="admin-match-label">Match ${m+1}</div>`;
+      const btns = document.createElement('div');
+      btns.className = 'admin-match-btns';
+      [t1, t2].forEach(name => {
+        const btn = document.createElement('button');
+        btn.className = 'admin-win-btn' + (winner === name ? ' active' : '');
+        btn.textContent = name || 'TBD';
+        btn.disabled = !name;
+        btn.onclick = () => recordResult(r, m, name);
+        btns.appendChild(btn);
+      });
+      matchDiv.appendChild(btns);
+      grid.appendChild(matchDiv);
+    }
+    block.appendChild(grid);
+    container.appendChild(block);
+  }
+}
+
+async function recordResult(r, m, team) {
+  const id = mid(r, m);
+  let newWinner;
+  if (results[id] === team) {
+    delete results[id];
+    newWinner = null;
+  } else {
+    results[id] = team;
+    newWinner = team;
+  }
+
+  if (db) {
+    if (newWinner) {
+      await db.from('results').upsert([{ match_id: id, winner: newWinner }], { onConflict: 'match_id' });
+    } else {
+      await db.from('results').delete().eq('match_id', id);
+    }
+  }
+
+  renderAdmin();
+  renderBracket();
+}
+
+function switchTab(tab, btnEl) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  btnEl.classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if (tab === 'leaderboard') loadLeaderboard();
+  if (tab === 'admin' && isAdmin) { loadResults().then(renderAdmin); fetchAllEntries(); }
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+(async () => {
+  initDB();
+  if (db) await loadResults();
+  renderBracket();
+  updatePickStatus();
+  
+  updateTopAnnouncement();
+  setInterval(updateTopAnnouncement, 30000);
+})();
+</script>
+</body>
+</html>
